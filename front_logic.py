@@ -16,7 +16,6 @@ BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
 MAX_FILE_SIZE_MB = int(os.environ.get("MAX_FILE_SIZE_MB", "50"))
 MAX_ROWS = int(os.environ.get("MAX_ROWS", "10000"))
 DOWNLOAD_DIR = Path(os.environ.get("DOWNLOAD_DIR", "/tmp"))
-SENTIMENT_MODEL_DIR = "sentiment_model"
 
 DOWNLOAD_FILENAME_RE = re.compile(r"^analysis_[a-f0-9]{32}\.csv$")
 
@@ -32,8 +31,7 @@ templates = Jinja2Templates(directory="templates")
 
 pipe = pipeline(
     "sentiment-analysis",
-    model=SENTIMENT_MODEL_DIR,
-    tokenizer=SENTIMENT_MODEL_DIR,
+    model = "distilbert-base-uncased-finetuned-sst-2-english",
     truncation=True,
 )
 
