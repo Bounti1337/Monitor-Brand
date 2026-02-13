@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sentiment analysis</title>
+    <style>
+        :root{
+            --bg: #0b1220;
+            --card: rgba(255,255,255,0.06);
+            --card2: rgba(255,255,255,0.08);
+            --text: rgba(255,255,255,0.92);
+            --muted: rgba(255,255,255,0.68);
+            --border: rgba(255,255,255,0.14);
+            --accent: #7c3aed;
+            --accent2: #06b6d4;
+            --good: #22c55e;
+            --warn: #f59e0b;
+            --bad: #ef4444;
+            --shadow: 0 18px 60px rgba(0,0,0,0.45);
+            --radius: 16px;
+        }
+        *{ box-sizing: border-box; }
+        html, body{ height: 100%; }
+        body{
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+            color: var(--text);
+            background:
+                radial-gradient(1000px 700px at 20% -10%, rgba(124,58,237,0.35), transparent 55%),
+                radial-gradient(900px 600px at 90% 10%, rgba(6,182,212,0.28), transparent 55%),
+                radial-gradient(900px 700px at 60% 120%, rgba(34,197,94,0.18), transparent 55%),
+                linear-gradient(180deg, #070b14, var(--bg));
+        }
+        a{ color: inherit; }
+        .container{
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 18px 42px;
+        }
+        .topbar{
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+        .brand{
+            display: grid;
+            gap: 6px;
+        }
+        .title{
+            font-size: 22px;
+            line-height: 1.2;
+            letter-spacing: 0.2px;
+            margin: 0;
+        }
+        .subtitle{
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            max-width: 68ch;
+        }
+        .badge{
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .grid{
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 16px;
+            align-items: start;
+        }
+        @media (max-width: 920px){
+            .grid{ grid-template-columns: 1fr; }
+        }
+        .card{
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .card__head{
+            padding: 16px 16px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
+        }
+        .card__title{
+            margin: 0;
+            font-size: 15px;
+            letter-spacing: 0.2px;
+        }
+        .card__desc{
+            margin: 6px 0 0;
+            font-size: 12.5px;
+            color: var(--muted);
+            line-height: 1.45;
+        }
+        .card__body{ padding: 16px; }
+        .row{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: end;
+        }
+        @media (max-width: 520px){
+            .row{ grid-template-columns: 1fr; }
+        }
+        .field{ display: grid; gap: 8px; }
+        .label{
+            font-size: 12px;
+            color: var(--muted);
+        }
+        input[type="text"], select, input[type="file"]{
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(10, 14, 26, 0.55);
+            color: var(--text);
+            outline: none;
+        }
+        input[type="file"]{
+            padding: 9px 12px;
+        }
+        input[type="text"]::placeholder{ color: rgba(255,255,255,0.45); }
+        input[type="text"]:focus, select:focus, input[type="file"]:focus{
+            border-color: rgba(124,58,237,0.55);
+            box-shadow: 0 0 0 4px rgba(124,58,237,0.18);
+        }
+        .check{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+        }
+        .check input{ margin: 0; }
+        .actions{
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .btn{
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform .08s ease, background .15s ease, border-color .15s ease;
+        }
+        .btn:hover{ background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.22); }
+        .btn:active{ transform: translateY(1px); }
+        .btn[disabled]{ opacity: 0.55; cursor: not-allowed; }
+        .btn--primary{
+            border-color: rgba(124,58,237,0.45);
+            background: linear-gradient(135deg, rgba(124,58,237,0.85), rgba(6,182,212,0.55));
+        }
+        .btn--primary:hover{ border-color: rgba(124,58,237,0.65); }
+        .pill{
+            font-size: 12px;
+            color: var(--muted);
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+        }
+        .results{
+            display: grid;
+            gap: 12px;
+        }
+        .status{
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .status--good{ color: rgba(34,197,94,0.95); border-color: rgba(34,197,94,0.22); background: rgba(34,197,94,0.10); }
+        .status--warn{ color: rgba(245,158,11,0.95); border-color: rgba(245,158,11,0.22); background: rgba(245,158,11,0.10); }
+        .status--bad{ color: rgba(239,68,68,0.95); border-color: rgba(239,68,68,0.22); background: rgba(239,68,68,0.10); }
+        .panel{
+            padding: 16px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+        }
+        .panel h3{
+            margin: 0 0 10px;
+            font-size: 14px;
+            letter-spacing: 0.2px;
+        }
+        .kv{
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px 12px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .kv .k{ color: var(--muted); }
+        .bars{
+            display: grid;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .bar-row{
+            display: grid;
+            grid-template-columns: minmax(140px, 1.1fr) 2.2fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        @media (max-width: 520px){
+            .bar-row{ grid-template-columns: 1fr; gap: 6px; }
+        }
+        .bar-label{
+            font-size: 12.5px;
+            color: rgba(255,255,255,0.86);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bar-track{
+            position: relative;
+            height: 10px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+        .bar-fill{
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(124,58,237,0.9), rgba(6,182,212,0.65));
+        }
+        .bar-fill--neg{
+            background: linear-gradient(90deg, rgba(239,68,68,0.95), rgba(245,158,11,0.70));
+        }
+        .bar-fill--pos{
+            background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(6,182,212,0.65));
+        }
+        .bar-val{
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .list{
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text);
+            font-size: 13px;
+        }
+        .list li{ margin: 6px 0; color: rgba(255,255,255,0.86); }
+        .muted{ color: var(--muted); }
+        .hr{
+            height: 1px;
+            background: rgba(255,255,255,0.10);
+            margin: 14px 0;
+        }
+        .footer{
+            margin-top: 16px;
+            color: rgba(255,255,255,0.48);
+            font-size: 12px;
+        }
+        .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="topbar">
+        <div class="brand">
+            <h1 class="title">Sentiment analysis</h1>
+            <p class="subtitle">Upload a dataset, pick the text column, and get sentiment distribution plus likely reasons (zero-shot).</p>
+        </div>
+        <div class="badge">
+            <span class="mono">/check</span>
+            <span class="muted">and</span>
+            <span class="mono">/convert</span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="card__head">
+                <h2 class="card__title">Sentiment analysis</h2>
+                <p class="card__desc">CSV supported. Default column: <span class="mono">text</span>.</p>
+            </div>
+            <div class="card__body">
+                <div class="row">
+                    <div class="field">
+                        <div class="label">CSV file</div>
+                        <input type="file" id="fileInput" accept=".csv">
+                    </div>
+                    <div class="field">
+                        <div class="label">Text column name</div>
+                        <input type="text" id="columnInput" value="text" placeholder="e.g. text">
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <label class="check" title="If enabled, the server will return a download link">
+                        <input type="checkbox" id="downloadCheckbox">
+                        <span>Download results (CSV)</span>
+                    </label>
+
+                    <button class="btn btn--primary" id="analyzeBtn" onclick="analyze()">Run analysis</button>
+                    <span class="pill">batch inference + reasons</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card__head">
+                <h2 class="card__title">Dataset converter</h2>
+                <p class="card__desc">Quickly converts CSV to Excel/CSV/Parquet via the server.</p>
+            </div>
+            <div class="card__body">
+                <div class="field">
+                    <div class="label">File (CSV)</div>
+                    <input type="file" id="convert_data" accept=".csv">
+                </div>
+
+                <div class="row" style="margin-top: 12px;">
+                    <div class="field">
+                        <div class="label">Format</div>
+                        <select id="file_type">
+                            <option value="excel">Excel (.xlsx)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="parquet">Parquet (.parquet)</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <div class="label">&nbsp;</div>
+                        <button class="btn" id="convertBtn" onclick="convert()">Convert</button>
+                    </div>
+                </div>
+
+                <div class="footer">Tip: Parquet requires a compatible engine in your environment (e.g. <span class="mono">pyarrow</span>).</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="height: 16px;"></div>
+
+    <div class="results">
+        <div id="status" class="status">Ready</div>
+
+        <div class="panel" id="stats"></div>
+        <div class="panel" id="reasons"></div>
+        <div class="panel" id="download"></div>
+    </div>
+</div>
+
+
+<script>
+// ===== HELPERS =====
+function percent(x) {
+    return (x * 100).toFixed(1) + "%";
+}
+
+function setStatus(text, kind) {
+    const status = document.getElementById("status");
+    status.textContent = text;
+    status.classList.remove("status--good", "status--warn", "status--bad");
+    if (kind === "good") status.classList.add("status--good");
+    if (kind === "warn") status.classList.add("status--warn");
+    if (kind === "bad") status.classList.add("status--bad");
+}
+
+function setBusy(isBusy) {
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const convertBtn = document.getElementById("convertBtn");
+    if (analyzeBtn) analyzeBtn.disabled = isBusy;
+    if (convertBtn) convertBtn.disabled = isBusy;
+}
+
+function renderResults(data) {
+    const stats = document.getElementById("stats");
+    const reasonsDiv = document.getElementById("reasons");
+    const downloadDiv = document.getElementById("download");
+
+    // ===== SUMMARY =====
+    const neg = Number(data.rating?.NEGATIVE || 0);
+    const pos = Number(data.rating?.POSITIVE || 0);
+    stats.innerHTML = `
+        <h3>Summary</h3>
+        <div class="kv">
+            <div class="k">Total rows</div><div class="v"><b>${data.number_of_samples}</b></div>
+            <div class="k">NEGATIVE</div><div class="v"><b>${percent(data.rating?.NEGATIVE || 0)}</b></div>
+            <div class="k">POSITIVE</div><div class="v"><b>${percent(data.rating?.POSITIVE || 0)}</b></div>
+            <div class="k">Confidence (mean) NEG</div><div class="v"><b>${percent(data.confidence?.NEGATIVE || 0)}</b></div>
+            <div class="k">Confidence (mean) POS</div><div class="v"><b>${percent(data.confidence?.POSITIVE || 0)}</b></div>
+        </div>
+        <div class="bars" aria-label="Sentiment chart">
+            <div class="bar-row">
+                <div class="bar-label">NEGATIVE</div>
+                <div class="bar-track"><div class="bar-fill bar-fill--neg" style="width:${Math.max(0, Math.min(100, neg * 100))}%"></div></div>
+                <div class="bar-val">${percent(neg)}</div>
+            </div>
+            <div class="bar-row">
+                <div class="bar-label">POSITIVE</div>
+                <div class="bar-track"><div class="bar-fill bar-fill--pos" style="width:${Math.max(0, Math.min(100, pos * 100))}%"></div></div>
+                <div class="bar-val">${percent(pos)}</div>
+            </div>
+        </div>
+    `;
+
+    // ===== REASONS =====
+    const reasonEntries = Object.entries(data.reasons || {}).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0));
+    const top = reasonEntries.slice(0, 10);
+
+    if (!top.length) {
+        reasonsDiv.innerHTML = `<h3>Reasons</h3><div class="muted">No reasons to show (no negative samples, or reasons disabled).</div>`;
+    } else {
+        const bars = top.map(([reason, value]) => {
+            const v = Number(value || 0);
+            const w = Math.max(0, Math.min(100, v * 100));
+            return `
+                <div class="bar-row" title="${String(reason).replaceAll('"', '&quot;')}">
+                    <div class="bar-label">${reason}</div>
+                    <div class="bar-track"><div class="bar-fill bar-fill--neg" style="width:${w}%"></div></div>
+                    <div class="bar-val">${percent(v)}</div>
+                </div>
+            `;
+        }).join("");
+
+        reasonsDiv.innerHTML = `
+            <h3>Reasons (top)</h3>
+            <div class="bars" aria-label="Reasons chart">${bars}</div>
+        `;
+    }
+
+    // ===== DOWNLOAD =====
+    downloadDiv.innerHTML = "";
+    if (data.download_url) {
+        downloadDiv.innerHTML = `<h3>Download Result</h3>`;
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = "Download CSV";
+        btn.onclick = () => window.location.href = data.download_url;
+        downloadDiv.appendChild(btn);
+    } else {
+        downloadDiv.innerHTML = `<h3>Download Result</h3><div class="muted">Disabled (enable “Download results (CSV)”).</div>`;
+    }
+}
+
+// ===== MAIN =====
+async function analyze() {
+    const fileInput = document.getElementById("fileInput");
+    const columnInput = document.getElementById("columnInput");
+    const downloadCheckbox = document.getElementById("downloadCheckbox");
+
+    if (!fileInput.files.length) {
+        setStatus("Please choose a CSV file to analyze.", "warn");
+        return;
+    }
+
+    setBusy(true);
+    setStatus("Analyzing… please wait.", "warn");
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("column", columnInput.value);
+    formData.append("download_data", downloadCheckbox.checked);
+
+    try {
+        const response = await fetch("/check", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) {
+            const msg = await response.text().catch(() => "");
+            setStatus(`Server error: ${response.status}. ${msg || ""}`.trim(), "bad");
+            return;
+        }
+
+        const data = await response.json();
+        setStatus("Done. See results below.", "good");
+        renderResults(data);
+    } catch (e) {
+        setStatus("Request failed. Make sure the server is running.", "bad");
+    } finally {
+        setBusy(false);
+    }
+}
+
+async function convert() {
+    const input = document.getElementById("convert_data");
+    const file = input.files[0];
+
+    const fileType = document.getElementById("file_type").value;
+
+    if (!file) {
+        setStatus("Please choose a CSV file to convert.", "warn");
+        return;
+    }
+
+    setBusy(true);
+    setStatus("Converting…", "warn");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("file_type", fileType);
+
+    try {
+        const response = await fetch("/convert",{
+            method : "POST" ,
+            body : formData
+        });
+
+        if (!response.ok) {
+            const msg = await response.text().catch(() => "");
+            setStatus(`Conversion failed: ${response.status}. ${msg || ""}`.trim(), "bad");
+            return;
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `converted.${fileType === "excel" ? "xlsx" : fileType}`;
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+        setStatus("File is ready and downloaded.", "good");
+    } catch (e) {
+        setStatus("Conversion failed. Make sure the server is running.", "bad");
+    } finally {
+        setBusy(false);
+    }
+
+}
+</script>
+
+</body>
+</html>

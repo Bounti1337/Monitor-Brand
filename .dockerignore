@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+*.ipynb
+.env
+.env.*
+*.md
+text_classification_model
+../Movie/loopa.ipynb
+loopa.py
+test.py
+mini_reviews_data.csv
+youtube_comment.csv

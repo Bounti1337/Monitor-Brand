@@ -1,0 +1,10 @@
+__pycache__/
+.env
+*.pt
+*.bin
+*.ckpt
+*.h5
+data/
+*.safetensors
+*.bin
+*.pt
