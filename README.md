@@ -2,6 +2,8 @@
 
 Web app for **sentiment analysis** and **zero-shot reason extraction** on text columns in CSV. Built with FastAPI, Transformers (Hugging Face), and PyTorch.
 
+## Link 
+
 ## Features
 
 - **Sentiment**: NEGATIVE / POSITIVE per row (fine-tuned sentiment model).

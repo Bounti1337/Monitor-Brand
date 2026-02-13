@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory="templates")
 
 pipe = pipeline(
     "sentiment-analysis",
-    model="cardiffnlp/twitter-roberta-base-sentiment",
+    model="cardiffnlp/twitter-roberta-base-sentiment-latest",  # мини версия
     truncation=True,
 )
 
