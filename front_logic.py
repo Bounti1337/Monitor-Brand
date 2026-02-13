@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory="templates")
 
 pipe = pipeline(
     "sentiment-analysis",
-    model = "distilbert-base-uncased-finetuned-sst-2-english",
+    model="distilbert-base-uncased-finetuned-sst-2-mini",
     truncation=True,
 )
 
